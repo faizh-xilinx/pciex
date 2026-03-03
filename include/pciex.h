@@ -5,7 +5,7 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-#define PCIEX_VERSION "0.1.0"
+#define PCIEX_VERSION "0.2.0"
 
 #define PCI_CFG_SPACE_SIZE      256
 #define PCI_EXT_CFG_SPACE_SIZE  4096
@@ -125,18 +125,44 @@ void show_all(const pci_device_t *dev);
 
 /* ── Capability decoders ─────────────────────────────────────────── */
 
-void decode_pcie_cap(const pci_device_t *dev, uint16_t off);
-void decode_msix_cap(const pci_device_t *dev, uint16_t off);
-void decode_msi_cap(const pci_device_t *dev, uint16_t off);
+/* Standard capability decoders */
 void decode_pm_cap(const pci_device_t *dev, uint16_t off);
+void decode_msi_cap(const pci_device_t *dev, uint16_t off);
+void decode_msix_cap(const pci_device_t *dev, uint16_t off);
+void decode_pcie_cap(const pci_device_t *dev, uint16_t off);
+void decode_vpd_cap(const pci_device_t *dev, uint16_t off);
+void decode_pcix_cap(const pci_device_t *dev, uint16_t off);
+void decode_vendor_cap(const pci_device_t *dev, uint16_t off);
+void decode_ssvid_cap(const pci_device_t *dev, uint16_t off);
+void decode_af_cap(const pci_device_t *dev, uint16_t off);
+
+/* Extended capability decoders */
+void decode_aer_cap(const pci_device_t *dev, uint16_t off);
+void decode_dsn_cap(const pci_device_t *dev, uint16_t off);
 void decode_sriov_cap(const pci_device_t *dev, uint16_t off);
 void decode_ats_cap(const pci_device_t *dev, uint16_t off);
 void decode_pasid_cap(const pci_device_t *dev, uint16_t off);
 void decode_pri_cap(const pci_device_t *dev, uint16_t off);
-void decode_aer_cap(const pci_device_t *dev, uint16_t off);
-void decode_dsn_cap(const pci_device_t *dev, uint16_t off);
 void decode_ide_cap(const pci_device_t *dev, uint16_t off);
 void decode_doe_cap(const pci_device_t *dev, uint16_t off);
+void decode_acs_cap(const pci_device_t *dev, uint16_t off);
+void decode_ari_cap(const pci_device_t *dev, uint16_t off);
+void decode_dpc_cap(const pci_device_t *dev, uint16_t off);
+void decode_l1pm_cap(const pci_device_t *dev, uint16_t off);
+void decode_ptm_cap(const pci_device_t *dev, uint16_t off);
+void decode_ltr_cap(const pci_device_t *dev, uint16_t off);
+void decode_dvsec_cap(const pci_device_t *dev, uint16_t off);
+void decode_rebar_cap(const pci_device_t *dev, uint16_t off);
+void decode_tph_cap(const pci_device_t *dev, uint16_t off);
+void decode_secpci_cap(const pci_device_t *dev, uint16_t off);
+void decode_dlnk_cap(const pci_device_t *dev, uint16_t off);
+void decode_16gt_cap(const pci_device_t *dev, uint16_t off);
+void decode_lmr_cap(const pci_device_t *dev, uint16_t off);
+void decode_32gt_cap(const pci_device_t *dev, uint16_t off);
+void decode_vc_cap(const pci_device_t *dev, uint16_t off);
+void decode_pwr_cap(const pci_device_t *dev, uint16_t off);
+void decode_mcast_cap(const pci_device_t *dev, uint16_t off);
+void decode_vendor_ext_cap(const pci_device_t *dev, uint16_t off);
 
 /* ── Lookup tables ───────────────────────────────────────────────── */
 

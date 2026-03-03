@@ -128,22 +128,47 @@ void show_cap_detail(const pci_device_t *dev, const pci_cap_t *cap)
 {
     if (!cap->is_extended) {
         switch (cap->id) {
-        case PCI_CAP_ID_PM:   decode_pm_cap(dev, cap->offset);   break;
-        case PCI_CAP_ID_MSI:  decode_msi_cap(dev, cap->offset);  break;
-        case PCI_CAP_ID_MSIX: decode_msix_cap(dev, cap->offset); break;
-        case PCI_CAP_ID_EXP:  decode_pcie_cap(dev, cap->offset); break;
+        case PCI_CAP_ID_PM:     decode_pm_cap(dev, cap->offset);     break;
+        case PCI_CAP_ID_MSI:    decode_msi_cap(dev, cap->offset);    break;
+        case PCI_CAP_ID_MSIX:   decode_msix_cap(dev, cap->offset);   break;
+        case PCI_CAP_ID_EXP:    decode_pcie_cap(dev, cap->offset);   break;
+        case PCI_CAP_ID_VPD:    decode_vpd_cap(dev, cap->offset);    break;
+        case PCI_CAP_ID_PCIX:   decode_pcix_cap(dev, cap->offset);   break;
+        case PCI_CAP_ID_VENDOR: decode_vendor_cap(dev, cap->offset); break;
+        case PCI_CAP_ID_SSVID:  decode_ssvid_cap(dev, cap->offset);  break;
+        case PCI_CAP_ID_AF:     decode_af_cap(dev, cap->offset);     break;
         default: break;
         }
     } else {
         switch (cap->id) {
-        case PCI_EXT_CAP_ID_AER:   decode_aer_cap(dev, cap->offset);   break;
-        case PCI_EXT_CAP_ID_DSN:   decode_dsn_cap(dev, cap->offset);   break;
-        case PCI_EXT_CAP_ID_SRIOV: decode_sriov_cap(dev, cap->offset); break;
-        case PCI_EXT_CAP_ID_ATS:   decode_ats_cap(dev, cap->offset);   break;
-        case PCI_EXT_CAP_ID_PASID: decode_pasid_cap(dev, cap->offset); break;
-        case PCI_EXT_CAP_ID_PRI:   decode_pri_cap(dev, cap->offset);   break;
-        case PCI_EXT_CAP_ID_IDE:   decode_ide_cap(dev, cap->offset);   break;
-        case PCI_EXT_CAP_ID_DOE:   decode_doe_cap(dev, cap->offset);   break;
+        case PCI_EXT_CAP_ID_AER:    decode_aer_cap(dev, cap->offset);        break;
+        case PCI_EXT_CAP_ID_DSN:    decode_dsn_cap(dev, cap->offset);        break;
+        case PCI_EXT_CAP_ID_SRIOV:  decode_sriov_cap(dev, cap->offset);      break;
+        case PCI_EXT_CAP_ID_ATS:    decode_ats_cap(dev, cap->offset);        break;
+        case PCI_EXT_CAP_ID_PASID:  decode_pasid_cap(dev, cap->offset);      break;
+        case PCI_EXT_CAP_ID_PRI:    decode_pri_cap(dev, cap->offset);        break;
+        case PCI_EXT_CAP_ID_IDE:    decode_ide_cap(dev, cap->offset);        break;
+        case PCI_EXT_CAP_ID_DOE:    decode_doe_cap(dev, cap->offset);        break;
+        case PCI_EXT_CAP_ID_ACS:    decode_acs_cap(dev, cap->offset);        break;
+        case PCI_EXT_CAP_ID_ARI:    decode_ari_cap(dev, cap->offset);        break;
+        case PCI_EXT_CAP_ID_DPC:    decode_dpc_cap(dev, cap->offset);        break;
+        case PCI_EXT_CAP_ID_L1PM:   decode_l1pm_cap(dev, cap->offset);       break;
+        case PCI_EXT_CAP_ID_PTM:    decode_ptm_cap(dev, cap->offset);        break;
+        case PCI_EXT_CAP_ID_LTR:    decode_ltr_cap(dev, cap->offset);        break;
+        case PCI_EXT_CAP_ID_DVSEC:  decode_dvsec_cap(dev, cap->offset);      break;
+        case PCI_EXT_CAP_ID_REBAR:  decode_rebar_cap(dev, cap->offset);      break;
+        case PCI_EXT_CAP_ID_VF_REBAR: decode_rebar_cap(dev, cap->offset);    break;
+        case PCI_EXT_CAP_ID_TPH:    decode_tph_cap(dev, cap->offset);        break;
+        case PCI_EXT_CAP_ID_SECPCI: decode_secpci_cap(dev, cap->offset);     break;
+        case PCI_EXT_CAP_ID_DLNK:   decode_dlnk_cap(dev, cap->offset);      break;
+        case PCI_EXT_CAP_ID_16GT:   decode_16gt_cap(dev, cap->offset);       break;
+        case PCI_EXT_CAP_ID_LMR:    decode_lmr_cap(dev, cap->offset);        break;
+        case PCI_EXT_CAP_ID_32GT:   decode_32gt_cap(dev, cap->offset);       break;
+        case PCI_EXT_CAP_ID_VC:     decode_vc_cap(dev, cap->offset);         break;
+        case PCI_EXT_CAP_ID_VC2:    decode_vc_cap(dev, cap->offset);         break;
+        case PCI_EXT_CAP_ID_PWR:    decode_pwr_cap(dev, cap->offset);        break;
+        case PCI_EXT_CAP_ID_MCAST:  decode_mcast_cap(dev, cap->offset);      break;
+        case PCI_EXT_CAP_ID_VENDOR: decode_vendor_ext_cap(dev, cap->offset);  break;
         default: break;
         }
     }

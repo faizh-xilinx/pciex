@@ -206,31 +206,55 @@ pciex c4:00.0
 sudo pciex c4:00.0
 ```
 
-## Capabilities Decoded
+## Capabilities Decoded (35 decoders)
 
 ### Standard Capabilities
 
 | ID | Name | Decode |
 |---|---|---|
-| 0x01 | Power Management | Power state, D1/D2 support, PME |
-| 0x05 | MSI | Enable, vectors, address, data |
+| 0x01 | Power Management | Power state, D1/D2 support, PME enable/status |
+| 0x03 | Vital Product Data | Address, flag, data register |
+| 0x05 | MSI | Enable, vectors, 32/64-bit address, data |
+| 0x07 | PCI-X | Command, status, bus/dev/func, 64-bit, 133MHz |
+| 0x09 | Vendor-Specific | Length, raw hex data dump |
+| 0x0D | Bridge Subsystem VID | Subsystem vendor and device ID |
 | 0x10 | PCI Express | Type, link speed/width, MPS, MRRS, downgrade warning |
 | 0x11 | MSI-X | Enable, table size, table/PBA BAR and offset |
+| 0x13 | Advanced Features | FLR support, TP status |
 
 ### Extended Capabilities
 
 | ID | Name | Decode |
 |---|---|---|
 | 0x0001 | AER | Uncorrectable/correctable error status with flag names |
+| 0x0002 | Virtual Channel | VC count, arbitration, port status |
 | 0x0003 | Device Serial Number | Formatted serial number |
-| 0x000F | ATS | Enable, invalidate queue depth |
-| 0x0010 | SR-IOV | VF enable, count, stride, VF BARs |
-| 0x0013 | PRI | Enable, status flags |
+| 0x0004 | Power Budgeting | Power data, capability |
+| 0x000B | Vendor-Specific Ext | VSEC ID, revision, length |
+| 0x000D | ACS | Source validation, translation blocking, redirect, egress |
+| 0x000E | ARI | MFVC, ACS, next function, function group |
+| 0x000F | ATS | Enable, invalidate queue depth, STU |
+| 0x0010 | SR-IOV | VF enable, count, stride, offset, VF BARs |
+| 0x0012 | Multicast | Max/num groups, window size, enable |
+| 0x0013 | PRI | Enable, reset, status flags |
+| 0x0015 | Resizable BAR | Supported sizes, current size per BAR |
+| 0x0017 | TPH | ST table location/size, extended requester |
+| 0x0018 | LTR | Max snoop/no-snoop latency with scale |
+| 0x0019 | Secondary PCIe | Link equalization, lane error status |
 | 0x001B | PASID | Enable, max width, exec/priv |
-| 0x002E | DOE | Capability, control, status flags |
+| 0x001D | DPC | Trigger policy, containment status, source ID |
+| 0x001E | L1 PM Substates | PCI-PM/ASPM L1.1/L1.2 support and enable |
+| 0x001F | PTM | Requester/responder/root, granularity, enable |
+| 0x0023 | DVSEC | Vendor ID, revision, length, DVSEC ID |
+| 0x0024 | VF Resizable BAR | Same as Resizable BAR for VFs |
+| 0x0025 | Data Link Feature | Scaled flow control, remote support, valid |
+| 0x0026 | 16.0 GT/s Phy Layer | Equalization status (phase 1/2/3) |
+| 0x0027 | Lane Margining | Margining/software ready status |
+| 0x002A | 32.0 GT/s Phy Layer | Modified TS, equalization status |
+| 0x002E | DOE | Capability, control, status (busy/error/ready) |
 | 0x0030 | IDE | Link/selective streams, TEE-limited, flow-through |
 
-All other capabilities are listed with their ID, offset, and name — just not deeply decoded yet.
+All other capabilities are listed with their ID, offset, and name.
 
 ## Project Structure
 
@@ -263,10 +287,10 @@ The easiest way to contribute is adding a new capability decoder. Each decoder i
 
 ### Good first issues
 
-- Add a decoder for a capability that's currently just listed by name
 - Add `--version` flag
 - Add vendor/device name lookup from pci.ids
 - Improve class/subclass name coverage in `src/names.c`
+- Add `--json` output mode
 
 ## Roadmap
 

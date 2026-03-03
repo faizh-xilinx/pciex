@@ -254,4 +254,100 @@
 #define PCI_PRI_STATUS          0x06
 #define PCI_PRI_CTRL_ENABLE     (1 << 0)
 
+/* VPD Capability */
+#define PCI_VPD_ADDR            0x02
+#define PCI_VPD_DATA            0x04
+#define PCI_VPD_ADDR_FLAG       (1 << 15)
+
+/* PCI-X Capability */
+#define PCI_PCIX_CMD            0x02
+#define PCI_PCIX_STATUS         0x04
+
+/* PCI Advanced Features Capability */
+#define PCI_AF_CAP              0x03
+#define PCI_AF_CTRL             0x04
+#define PCI_AF_STATUS           0x05
+
+/* ACS Extended Capability */
+#define PCI_ACS_CAP             0x04
+#define PCI_ACS_CTRL            0x06
+#define PCI_ACS_CAP_VALID       (1 << 0)
+#define PCI_ACS_CAP_BLOCK       (1 << 1)
+#define PCI_ACS_CAP_REQ_RED     (1 << 2)
+#define PCI_ACS_CAP_CMPLT_RED   (1 << 3)
+#define PCI_ACS_CAP_FORWARD     (1 << 4)
+#define PCI_ACS_CAP_EGRESS      (1 << 5)
+#define PCI_ACS_CAP_TRANS       (1 << 6)
+
+/* ARI Extended Capability */
+#define PCI_ARI_CAP             0x04
+#define PCI_ARI_CTRL            0x06
+
+/* DPC Extended Capability */
+#define PCI_DPC_CAP             0x04
+#define PCI_DPC_CTRL            0x06
+#define PCI_DPC_STATUS          0x08
+#define PCI_DPC_SOURCE_ID       0x0A
+
+/* L1 PM Substates Extended Capability */
+#define PCI_L1PM_CAP            0x04
+#define PCI_L1PM_CTRL1          0x08
+#define PCI_L1PM_CTRL2          0x0C
+
+/* PTM Extended Capability */
+#define PCI_PTM_CAP             0x04
+#define PCI_PTM_CTRL            0x08
+
+/* LTR Extended Capability */
+#define PCI_LTR_MAX_SNOOP       0x04
+#define PCI_LTR_MAX_NOSNOOP     0x06
+
+/* DVSEC Extended Capability */
+#define PCI_DVSEC_HEADER1       0x04
+#define PCI_DVSEC_HEADER2       0x08
+
+/* Resizable BAR Extended Capability */
+#define PCI_REBAR_CAP           0x04
+#define PCI_REBAR_CTRL          0x08
+
+/* TPH Extended Capability */
+#define PCI_TPH_CAP             0x04
+
+/* Secondary PCIe Extended Capability */
+#define PCI_SECPCI_LNKCTL3      0x04
+#define PCI_SECPCI_LANE_ERR_STA  0x08
+
+/* Data Link Feature Extended Capability */
+#define PCI_DLNK_CAP            0x04
+#define PCI_DLNK_STATUS         0x08
+
+/* Physical Layer 16 GT/s Extended Capability */
+#define PCI_16GT_CAP            0x04
+#define PCI_16GT_CTRL           0x08
+#define PCI_16GT_STATUS         0x0C
+
+/* Lane Margining at Receiver Extended Capability */
+#define PCI_LMR_PORT_CAP        0x04
+#define PCI_LMR_PORT_STATUS     0x06
+
+/* Physical Layer 32 GT/s Extended Capability */
+#define PCI_32GT_CAP            0x04
+#define PCI_32GT_CTRL           0x08
+#define PCI_32GT_STATUS         0x0C
+
+/* Virtual Channel Extended Capability */
+#define PCI_VC_PORT_CAP1        0x04
+#define PCI_VC_PORT_CAP2        0x08
+#define PCI_VC_PORT_CTRL        0x0C
+#define PCI_VC_PORT_STATUS      0x0E
+
+/* Power Budgeting Extended Capability */
+#define PCI_PWR_DSR             0x04
+#define PCI_PWR_DATA            0x08
+#define PCI_PWR_CAP             0x0C
+
+/* Multicast Extended Capability */
+#define PCI_MCAST_CAP           0x04
+#define PCI_MCAST_CTRL          0x06
+
 #endif /* PCIEX_PCI_REGS_H */

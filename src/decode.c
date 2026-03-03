@@ -303,3 +303,382 @@ void decode_doe_cap(const pci_device_t *dev, uint16_t off)
            (sta & (1 << 2)) ? "+" : "-",
            (sta & (1 << 31)) ? "+" : "-");
 }
+
+/* ── Standard Capability Decoders ──────────────────────────────────── */
+
+void decode_vpd_cap(const pci_device_t *dev, uint16_t off)
+{
+    uint16_t addr = cfg_read16(dev, off + PCI_VPD_ADDR);
+    uint32_t data = cfg_read32(dev, off + PCI_VPD_DATA);
+
+    printf(INDENT "Address: 0x%04x  Flag%s  Data: 0x%08x\n",
+           addr & 0x7FFF,
+           (addr & PCI_VPD_ADDR_FLAG) ? "+" : "-",
+           data);
+}
+
+void decode_pcix_cap(const pci_device_t *dev, uint16_t off)
+{
+    uint16_t cmd = cfg_read16(dev, off + PCI_PCIX_CMD);
+    uint32_t sta = cfg_read32(dev, off + PCI_PCIX_STATUS);
+
+    const char *mmc[] = {"512", "1024", "2048", "4096"};
+    printf(INDENT "Command: 0x%04x  ERO%s  MaxMemRead=%s  MaxSplit=%d\n",
+           cmd,
+           (cmd & (1 << 0)) ? "+" : "-",
+           mmc[(cmd >> 2) & 0x03],
+           1 << ((cmd >> 4) & 0x07));
+    printf(INDENT "Status:  0x%08x  Bus=%d Dev=%d Func=%d  64bit%s 133MHz%s\n",
+           sta,
+           (sta >> 8) & 0xFF, (sta >> 3) & 0x1F, sta & 0x07,
+           (sta & (1 << 17)) ? "+" : "-",
+           (sta & (1 << 18)) ? "+" : "-");
+}
+
+void decode_vendor_cap(const pci_device_t *dev, uint16_t off)
+{
+    uint8_t len = cfg_read8(dev, off + 0x02);
+
+    printf(INDENT "Length: %s%d%s bytes\n", clr(CLR_CYAN), len, clr(CLR_RESET));
+    if (len > 3 && len <= 64) {
+        printf(INDENT "Data:  ");
+        for (int i = 3; i < len && (size_t)(off + i) < dev->cfg_size; i++)
+            printf("%02x ", cfg_read8(dev, off + i));
+        printf("\n");
+    }
+}
+
+void decode_ssvid_cap(const pci_device_t *dev, uint16_t off)
+{
+    uint16_t svid = cfg_read16(dev, off + 0x04);
+    uint16_t ssid = cfg_read16(dev, off + 0x06);
+
+    printf(INDENT "Subsystem Vendor ID: %s0x%04x%s\n",
+           clr(CLR_CYAN), svid, clr(CLR_RESET));
+    printf(INDENT "Subsystem ID:        %s0x%04x%s\n",
+           clr(CLR_CYAN), ssid, clr(CLR_RESET));
+}
+
+void decode_af_cap(const pci_device_t *dev, uint16_t off)
+{
+    uint8_t cap  = cfg_read8(dev, off + PCI_AF_CAP);
+    uint8_t ctrl = cfg_read8(dev, off + PCI_AF_CTRL);
+    uint8_t sta  = cfg_read8(dev, off + PCI_AF_STATUS);
+
+    printf(INDENT "AFCap:  TP%s FLR%s\n",
+           (cap & (1 << 0)) ? "+" : "-",
+           (cap & (1 << 1)) ? "+" : "-");
+    printf(INDENT "AFCtrl: Initiate_FLR%s\n",
+           (ctrl & (1 << 0)) ? "+" : "-");
+    printf(INDENT "AFSta:  TP%s\n",
+           (sta & (1 << 0)) ? "+" : "-");
+}
+
+/* ── Extended Capability Decoders ──────────────────────────────────── */
+
+void decode_acs_cap(const pci_device_t *dev, uint16_t off)
+{
+    uint16_t cap  = cfg_read16(dev, off + PCI_ACS_CAP);
+    uint16_t ctrl = cfg_read16(dev, off + PCI_ACS_CTRL);
+
+    printf(INDENT "ACSCap:  SrcValid%s TransBlk%s ReqRedir%s CmpltRedir%s UpFwd%s EgressCtrl%s DirTrans%s\n",
+           (cap & PCI_ACS_CAP_VALID) ? "+" : "-",
+           (cap & PCI_ACS_CAP_BLOCK) ? "+" : "-",
+           (cap & PCI_ACS_CAP_REQ_RED) ? "+" : "-",
+           (cap & PCI_ACS_CAP_CMPLT_RED) ? "+" : "-",
+           (cap & PCI_ACS_CAP_FORWARD) ? "+" : "-",
+           (cap & PCI_ACS_CAP_EGRESS) ? "+" : "-",
+           (cap & PCI_ACS_CAP_TRANS) ? "+" : "-");
+    printf(INDENT "ACSCtrl: SrcValid%s TransBlk%s ReqRedir%s CmpltRedir%s UpFwd%s EgressCtrl%s DirTrans%s\n",
+           (ctrl & (1 << 0)) ? "+" : "-",
+           (ctrl & (1 << 1)) ? "+" : "-",
+           (ctrl & (1 << 2)) ? "+" : "-",
+           (ctrl & (1 << 3)) ? "+" : "-",
+           (ctrl & (1 << 4)) ? "+" : "-",
+           (ctrl & (1 << 5)) ? "+" : "-",
+           (ctrl & (1 << 6)) ? "+" : "-");
+}
+
+void decode_ari_cap(const pci_device_t *dev, uint16_t off)
+{
+    uint16_t cap  = cfg_read16(dev, off + PCI_ARI_CAP);
+    uint16_t ctrl = cfg_read16(dev, off + PCI_ARI_CTRL);
+
+    printf(INDENT "ARICap:  MFVC%s ACS%s  NextFunc: %d\n",
+           (cap & (1 << 0)) ? "+" : "-",
+           (cap & (1 << 1)) ? "+" : "-",
+           (cap >> 8) & 0xFF);
+    printf(INDENT "ARICtrl: MFVC%s ACS%s  FuncGroup: %d\n",
+           (ctrl & (1 << 0)) ? "+" : "-",
+           (ctrl & (1 << 1)) ? "+" : "-",
+           (ctrl >> 4) & 0x07);
+}
+
+void decode_dpc_cap(const pci_device_t *dev, uint16_t off)
+{
+    uint16_t cap    = cfg_read16(dev, off + PCI_DPC_CAP);
+    uint16_t ctrl   = cfg_read16(dev, off + PCI_DPC_CTRL);
+    uint16_t status = cfg_read16(dev, off + PCI_DPC_STATUS);
+    uint16_t src_id = cfg_read16(dev, off + PCI_DPC_SOURCE_ID);
+
+    const char *triggers[] = {"Disabled", "ERR_FATAL", "ERR_NONFATAL", "ERR_COR+ERR_FATAL+ERR_NONFATAL"};
+
+    printf(INDENT "DPCCap:  IntMsgNum=%d  RPExt%s PoisonedTLP_Blk%s SW_Trigger%s\n",
+           cap & 0x1F,
+           (cap & (1 << 5)) ? "+" : "-",
+           (cap & (1 << 6)) ? "+" : "-",
+           (cap & (1 << 7)) ? "+" : "-");
+    printf(INDENT "DPCCtrl: Trigger=%s%s%s  IntEn%s ErrCorEn%s\n",
+           clr(CLR_CYAN), triggers[(ctrl >> 1) & 0x03], clr(CLR_RESET),
+           (ctrl & (1 << 3)) ? "+" : "-",
+           (ctrl & (1 << 8)) ? "+" : "-");
+
+    bool triggered = status & (1 << 0);
+    printf(INDENT "DPCSta:  Triggered%s %s%s%s  IntSta%s  Source: %s0x%04x%s\n",
+           triggered ? "+" : "-",
+           triggered ? clr(CLR_RED) : clr(CLR_GREEN),
+           triggered ? "CONTAINMENT ACTIVE" : "OK",
+           clr(CLR_RESET),
+           (status & (1 << 3)) ? "+" : "-",
+           clr(CLR_YELLOW), src_id, clr(CLR_RESET));
+}
+
+void decode_l1pm_cap(const pci_device_t *dev, uint16_t off)
+{
+    uint32_t cap   = cfg_read32(dev, off + PCI_L1PM_CAP);
+    uint32_t ctrl1 = cfg_read32(dev, off + PCI_L1PM_CTRL1);
+    uint32_t ctrl2 = cfg_read32(dev, off + PCI_L1PM_CTRL2);
+
+    printf(INDENT "L1PMCap:  PCI-PM_L1.2%s PCI-PM_L1.1%s ASPM_L1.2%s ASPM_L1.1%s L1PM%s\n",
+           (cap & (1 << 0)) ? "+" : "-",
+           (cap & (1 << 1)) ? "+" : "-",
+           (cap & (1 << 2)) ? "+" : "-",
+           (cap & (1 << 3)) ? "+" : "-",
+           (cap & (1 << 4)) ? "+" : "-");
+    printf(INDENT "L1PMCtl1: 0x%08x  PCI-PM_L1.2%s PCI-PM_L1.1%s ASPM_L1.2%s ASPM_L1.1%s\n",
+           ctrl1,
+           (ctrl1 & (1 << 0)) ? "+" : "-",
+           (ctrl1 & (1 << 1)) ? "+" : "-",
+           (ctrl1 & (1 << 2)) ? "+" : "-",
+           (ctrl1 & (1 << 3)) ? "+" : "-");
+    printf(INDENT "L1PMCtl2: 0x%08x\n", ctrl2);
+}
+
+void decode_ptm_cap(const pci_device_t *dev, uint16_t off)
+{
+    uint32_t cap  = cfg_read32(dev, off + PCI_PTM_CAP);
+    uint32_t ctrl = cfg_read32(dev, off + PCI_PTM_CTRL);
+
+    printf(INDENT "PTMCap:  Requester%s Responder%s Root%s  Granularity: %d\n",
+           (cap & (1 << 0)) ? "+" : "-",
+           (cap & (1 << 1)) ? "+" : "-",
+           (cap & (1 << 2)) ? "+" : "-",
+           (cap >> 8) & 0xFF);
+    printf(INDENT "PTMCtrl: Enable%s %s%s%s  RootSelect%s  Granularity: %d\n",
+           (ctrl & (1 << 0)) ? "+" : "-",
+           (ctrl & (1 << 0)) ? clr(CLR_GREEN) : clr(CLR_DIM),
+           (ctrl & (1 << 0)) ? "ENABLED" : "DISABLED",
+           clr(CLR_RESET),
+           (ctrl & (1 << 1)) ? "+" : "-",
+           (ctrl >> 8) & 0xFF);
+}
+
+void decode_ltr_cap(const pci_device_t *dev, uint16_t off)
+{
+    uint16_t snoop   = cfg_read16(dev, off + PCI_LTR_MAX_SNOOP);
+    uint16_t nosnoop = cfg_read16(dev, off + PCI_LTR_MAX_NOSNOOP);
+
+    const char *scales[] = {"1ns", "32ns", "1024ns", "32768ns", "1048576ns", "33554432ns", "?", "?"};
+
+    printf(INDENT "Max Snoop Latency:    %s%d%s x %s\n",
+           clr(CLR_CYAN), snoop & 0x3FF, clr(CLR_RESET),
+           scales[(snoop >> 10) & 0x07]);
+    printf(INDENT "Max No-Snoop Latency: %s%d%s x %s\n",
+           clr(CLR_CYAN), nosnoop & 0x3FF, clr(CLR_RESET),
+           scales[(nosnoop >> 10) & 0x07]);
+}
+
+void decode_dvsec_cap(const pci_device_t *dev, uint16_t off)
+{
+    uint32_t hdr1 = cfg_read32(dev, off + PCI_DVSEC_HEADER1);
+    uint32_t hdr2 = cfg_read32(dev, off + PCI_DVSEC_HEADER2);
+
+    uint16_t vendor_id = hdr1 & 0xFFFF;
+    uint8_t  rev       = (hdr1 >> 16) & 0x0F;
+    uint16_t length    = (hdr1 >> 20) & 0xFFF;
+    uint16_t dvsec_id  = hdr2 & 0xFFFF;
+
+    printf(INDENT "DVSEC Vendor: %s0x%04x%s  Rev: %d  Length: %d  DVSEC ID: %s0x%04x%s\n",
+           clr(CLR_CYAN), vendor_id, clr(CLR_RESET),
+           rev, length,
+           clr(CLR_YELLOW), dvsec_id, clr(CLR_RESET));
+}
+
+void decode_rebar_cap(const pci_device_t *dev, uint16_t off)
+{
+    for (int i = 0; i < 6; i++) {
+        uint32_t cap  = cfg_read32(dev, off + PCI_REBAR_CAP + i * 8);
+        uint32_t ctrl = cfg_read32(dev, off + PCI_REBAR_CTRL + i * 8);
+
+        if (cap == 0 && ctrl == 0)
+            break;
+
+        uint8_t  bar_idx = (ctrl >> 8) & 0x07;
+        uint8_t  nbars   = (ctrl >> 5) & 0x07;
+        uint32_t sizes   = (cap >> 4) & 0x0FFFFF;
+        uint8_t  cur_sz  = (ctrl >> 8) & 0x1F;
+
+        printf(INDENT "BAR%d:  Sizes=[", bar_idx);
+        for (int s = 0; s < 20; s++) {
+            if (sizes & (1 << s))
+                printf(" %dMB", 1 << s);
+        }
+        printf(" ]  Current: %s%dMB%s  NumBARs: %d\n",
+               clr(CLR_GREEN), 1 << cur_sz, clr(CLR_RESET), nbars);
+    }
+}
+
+void decode_tph_cap(const pci_device_t *dev, uint16_t off)
+{
+    uint32_t cap = cfg_read32(dev, off + PCI_TPH_CAP);
+
+    printf(INDENT "TPHCap:  NoST%s IntVec%s DevSpec%s\n",
+           (cap & (1 << 0)) ? "+" : "-",
+           (cap & (1 << 1)) ? "+" : "-",
+           (cap & (1 << 2)) ? "+" : "-");
+    printf(INDENT "         ExtTPHReq%s  STTableLoc=%d  STTableSize=%d\n",
+           (cap & (1 << 8)) ? "+" : "-",
+           (cap >> 9) & 0x03,
+           (cap >> 16) & 0x7FF);
+}
+
+void decode_secpci_cap(const pci_device_t *dev, uint16_t off)
+{
+    uint32_t lnkctl3  = cfg_read32(dev, off + PCI_SECPCI_LNKCTL3);
+    uint32_t lane_err = cfg_read32(dev, off + PCI_SECPCI_LANE_ERR_STA);
+
+    printf(INDENT "LnkCtl3:     0x%08x  Equalization%s LinkEqReqIntEn%s\n",
+           lnkctl3,
+           (lnkctl3 & (1 << 0)) ? "+" : "-",
+           (lnkctl3 & (1 << 1)) ? "+" : "-");
+    printf(INDENT "LaneErrSta:  0x%08x", lane_err);
+    if (lane_err)
+        printf("  %s(errors on lanes)%s", clr(CLR_RED), clr(CLR_RESET));
+    else
+        printf("  %s(clean)%s", clr(CLR_GREEN), clr(CLR_RESET));
+    printf("\n");
+}
+
+void decode_dlnk_cap(const pci_device_t *dev, uint16_t off)
+{
+    uint32_t cap    = cfg_read32(dev, off + PCI_DLNK_CAP);
+    uint32_t status = cfg_read32(dev, off + PCI_DLNK_STATUS);
+
+    printf(INDENT "DLFeatureCap:  ScaledFlowCtrl%s  LocalDLFeatureSupp: 0x%03x\n",
+           (cap & (1 << 0)) ? "+" : "-",
+           (cap >> 0) & 0xFFF);
+    printf(INDENT "DLFeatureSta:  RemoteDLFeatureSupp: 0x%03x  Valid%s\n",
+           (status >> 0) & 0xFFF,
+           (status & (1 << 31)) ? "+" : "-");
+}
+
+void decode_16gt_cap(const pci_device_t *dev, uint16_t off)
+{
+    uint32_t cap  = cfg_read32(dev, off + PCI_16GT_CAP);
+    uint32_t ctrl = cfg_read32(dev, off + PCI_16GT_CTRL);
+    uint32_t sta  = cfg_read32(dev, off + PCI_16GT_STATUS);
+
+    printf(INDENT "16GTCap:  0x%08x\n", cap);
+    printf(INDENT "16GTCtrl: 0x%08x\n", ctrl);
+    printf(INDENT "16GTSta:  0x%08x  EqComplete%s Phase1%s Phase2%s Phase3%s\n",
+           sta,
+           (sta & (1 << 0)) ? "+" : "-",
+           (sta & (1 << 1)) ? "+" : "-",
+           (sta & (1 << 2)) ? "+" : "-",
+           (sta & (1 << 3)) ? "+" : "-");
+}
+
+void decode_lmr_cap(const pci_device_t *dev, uint16_t off)
+{
+    uint16_t cap = cfg_read16(dev, off + PCI_LMR_PORT_CAP);
+    uint16_t sta = cfg_read16(dev, off + PCI_LMR_PORT_STATUS);
+
+    printf(INDENT "LMRCap:   MarginingReady%s SoftwareReady%s\n",
+           (cap & (1 << 0)) ? "+" : "-",
+           (cap & (1 << 1)) ? "+" : "-");
+    printf(INDENT "LMRSta:   MarginingReady%s SoftwareReady%s\n",
+           (sta & (1 << 0)) ? "+" : "-",
+           (sta & (1 << 1)) ? "+" : "-");
+}
+
+void decode_32gt_cap(const pci_device_t *dev, uint16_t off)
+{
+    uint32_t cap  = cfg_read32(dev, off + PCI_32GT_CAP);
+    uint32_t ctrl = cfg_read32(dev, off + PCI_32GT_CTRL);
+    uint32_t sta  = cfg_read32(dev, off + PCI_32GT_STATUS);
+
+    printf(INDENT "32GTCap:  0x%08x  ModTS%s\n",
+           cap, (cap & (1 << 0)) ? "+" : "-");
+    printf(INDENT "32GTCtrl: 0x%08x\n", ctrl);
+    printf(INDENT "32GTSta:  0x%08x  EqComplete%s Phase1%s Phase2%s Phase3%s\n",
+           sta,
+           (sta & (1 << 0)) ? "+" : "-",
+           (sta & (1 << 1)) ? "+" : "-",
+           (sta & (1 << 2)) ? "+" : "-",
+           (sta & (1 << 3)) ? "+" : "-");
+}
+
+void decode_vc_cap(const pci_device_t *dev, uint16_t off)
+{
+    uint32_t cap1 = cfg_read32(dev, off + PCI_VC_PORT_CAP1);
+    uint32_t cap2 = cfg_read32(dev, off + PCI_VC_PORT_CAP2);
+    uint16_t ctrl = cfg_read16(dev, off + PCI_VC_PORT_CTRL);
+    uint16_t sta  = cfg_read16(dev, off + PCI_VC_PORT_STATUS);
+
+    uint8_t ext_vc_cnt  = cap1 & 0x07;
+    uint8_t lp_ext_vc   = (cap1 >> 4) & 0x07;
+    uint8_t ref_clk     = (cap1 >> 8) & 0x03;
+
+    printf(INDENT "PortCap1: ExtVCCount=%s%d%s  LowPriExtVC=%d  RefClk=%d\n",
+           clr(CLR_CYAN), ext_vc_cnt, clr(CLR_RESET),
+           lp_ext_vc, ref_clk);
+    printf(INDENT "PortCap2: ARBTableOffset=0x%06x  ARBCap=0x%02x\n",
+           (cap2 >> 8) & 0xFFFFFF, cap2 & 0xFF);
+    printf(INDENT "PortCtrl: 0x%04x  PortSta: 0x%04x  ARBTableValid%s\n",
+           ctrl, sta, (sta & (1 << 0)) ? "+" : "-");
+}
+
+void decode_pwr_cap(const pci_device_t *dev, uint16_t off)
+{
+    uint32_t data = cfg_read32(dev, off + PCI_PWR_DATA);
+    uint32_t cap  = cfg_read32(dev, off + PCI_PWR_CAP);
+
+    printf(INDENT "PwrData: 0x%08x  BudgetSys%s\n",
+           data, (cap & (1 << 0)) ? "+" : "-");
+    printf(INDENT "PwrCap:  0x%08x\n", cap);
+}
+
+void decode_mcast_cap(const pci_device_t *dev, uint16_t off)
+{
+    uint16_t cap  = cfg_read16(dev, off + PCI_MCAST_CAP);
+    uint16_t ctrl = cfg_read16(dev, off + PCI_MCAST_CTRL);
+
+    printf(INDENT "MCastCap:  MaxGroup=%d  WindowSizeReq=%d\n",
+           (cap >> 0) & 0x3F, (cap >> 8) & 0x3F);
+    printf(INDENT "MCastCtrl: NumGroup=%d  Enable%s %s%s%s\n",
+           ctrl & 0x3F,
+           (ctrl & (1 << 15)) ? "+" : "-",
+           (ctrl & (1 << 15)) ? clr(CLR_GREEN) : clr(CLR_DIM),
+           (ctrl & (1 << 15)) ? "ENABLED" : "DISABLED",
+           clr(CLR_RESET));
+}
+
+void decode_vendor_ext_cap(const pci_device_t *dev, uint16_t off)
+{
+    uint32_t hdr = cfg_read32(dev, off + 0x04);
+
+    printf(INDENT "VSEC ID: %s0x%04x%s  Rev: %d  Length: %d\n",
+           clr(CLR_CYAN), hdr & 0xFFFF, clr(CLR_RESET),
+           (hdr >> 16) & 0x0F,
+           (hdr >> 20) & 0xFFF);
+}
