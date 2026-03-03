@@ -15,6 +15,14 @@ A fast, colorful, zero-dependency command-line utility to read and decode PCI/PC
 | Hex dump with coloring | No | Yes (00=dim, FF=red) |
 | Dependencies | libpci, pci.ids | None |
 | Config space access | ioctl / libpci | sysfs (no root for basic read) |
+| BAR size detection | Yes | Yes (from sysfs, no writes) |
+| MSI-X vector table dump | No | Yes [root] |
+| MMIO BAR read | No | Yes [root] |
+| Validation warnings | No | Yes (link downgrade, AER, BAR overlap) |
+| Live register watch | No | Yes [root] |
+| Config space write | No (setpci) | Yes [root+force] |
+| Device reset (FLR/SBR) | No | Yes [root+force] |
+| Link retrain | No | Yes [root+force] |
 
 ## Quick Start
 
@@ -136,13 +144,18 @@ $ pciex -c c4:00.0
 
 Shows only the capability list with detailed decodes — no header or BARs.
 
-### BAR decode only
+### BAR decode with sizes
 
 ```
 $ pciex -b c4:00.0
+
+── BARs ──
+  BAR0: 0x0000f0000000  Mem  64-bit prefetchable  [size=64 MB]
+  BAR2: 0x0000f3000000  Mem  32-bit non-prefetchable  [size=64 KB]
+  BAR4: 0x0000f3010000  Mem  32-bit non-prefetchable  [size=64 KB]
 ```
 
-Shows only BAR addresses, types, and sizes.
+Shows BAR addresses, types, and sizes (from sysfs resource file).
 
 ### MSI-X detail
 
@@ -173,6 +186,71 @@ $ pciex -s c4:00.0
 
 See VF count, VF BAR layout, stride, and enable status at a glance.
 
+### Validation
+
+```
+$ pciex --validate c4:00.0
+
+WARN: Link downgraded (cap 16.0 GT/s x8, current 8.0 GT/s x4)
+INFO: AER uncorrectable errors pending
+OK: No BAR overlap detected
+```
+
+Runs automated checks for link downgrade, AER errors, and BAR overlap.
+
+### MSI-X vector table
+
+```
+$ sudo pciex --msix-table c4:00.0
+
+── MSI-X Vector Table ──
+  [0] addr=0xf3000000  data=0x00000001  ctrl=0x0000
+  [1] addr=0xf3000010  data=0x00000002  ctrl=0x0000
+  ...
+```
+
+Dumps the MSI-X vector table and PBA from MMIO. Requires root.
+
+### Live watch
+
+```
+$ sudo pciex --watch c4:00.0 AER
+```
+
+Polls the specified register(s) in real-time and shows diffs when values change. Requires root.
+
+### MMIO read
+
+```
+$ sudo pciex --mmio c4:00.0 0 0x0 64
+```
+
+Reads from a BAR: `--mmio <BDF> <BAR_index> <offset> <bytes>`. Requires root.
+
+### Config write
+
+```
+$ sudo pciex --write c4:00.0 0x04 0x0007 --force
+```
+
+Writes to config space. Requires root and `--force` with interactive confirmation.
+
+### Device reset
+
+```
+$ sudo pciex --flr c4:00.0 --force
+```
+
+Performs Function Level Reset (FLR) or Secondary Bus Reset (SBR). Requires root and `--force`.
+
+### Link retrain
+
+```
+$ sudo pciex --retrain c4:00.0 --force
+```
+
+Triggers link retraining. Requires root and `--force`.
+
 ### Hex dump of config space
 
 ```
@@ -194,17 +272,15 @@ pciex accepts BDF (Bus:Device.Function) in these formats:
 | `bus:dev.func` | `c4:00.0` | Domain defaults to 0000 |
 | `bus:dev` | `c4:00` | Function defaults to 0 |
 
-### No root required
+### Root Access
 
-pciex reads from sysfs (`/sys/bus/pci/devices/*/config`). Standard users can read the first 64 bytes of config space. For full 4096-byte extended config space, you need root or the `CAP_SYS_RAWIO` capability:
+pciex reads from sysfs (`/sys/bus/pci/devices/*/config`).
 
-```bash
-# Basic (64 bytes — header, BARs, standard caps):
-pciex c4:00.0
+**Without root:** You get 64-byte config space (header, BARs, standard caps), BAR sizes from the sysfs resource file, and basic decode. No writes, no MMIO, no extended caps.
 
-# Full extended config space (4096 bytes — all extended caps):
-sudo pciex c4:00.0
-```
+**With root:** Full 4096-byte extended config space (all extended caps), MSI-X table dump, MMIO read, live watch, config write, device reset, and link retrain.
+
+**Destructive operations** (config write, FLR, bus reset, link retrain) require both root and the `--force` flag, with interactive confirmation before proceeding.
 
 ## Capabilities Decoded (35 decoders)
 
@@ -276,7 +352,13 @@ pciex/
     ├── names.c            Human-readable names for classes, caps, speeds
     ├── decode.c           Capability decoders
     ├── display.c          Colored terminal output and formatting
-    └── color.c            ANSI color abstraction (auto-detects TTY)
+    ├── color.c            ANSI color abstraction (auto-detects TTY)
+    ├── privilege.c       Root detection, sudo hints, --force confirmation
+    ├── barsize.c          BAR size detection from sysfs resource file
+    ├── mmio.c             MMIO BAR access and MSI-X table dump
+    ├── validate.c         Automated validation warnings
+    ├── watch.c            Live register polling with diff
+    └── write.c            Config write, FLR, bus reset, link retrain
 ```
 
 ## Contributing
@@ -287,8 +369,8 @@ The easiest way to contribute is adding a new capability decoder. Each decoder i
 
 ### Good first issues
 
-- Add `--version` flag
-- Add vendor/device name lookup from pci.ids
+- Add `--diff` mode to compare two devices
+- Add pci.ids vendor/device name lookup
 - Improve class/subclass name coverage in `src/names.c`
 - Add `--json` output mode
 
@@ -296,8 +378,6 @@ The easiest way to contribute is adding a new capability decoder. Each decoder i
 
 - [ ] `--json` output for scripting and CI pipelines
 - [ ] `--diff <BDF1> <BDF2>` to compare two devices side-by-side
-- [ ] `--watch <BDF>` to poll registers in real-time
-- [ ] Validation warnings (BAR overlap, link downgrade, AER errors)
 - [ ] pci.ids database integration for vendor/device names
 - [ ] `man` page
 - [ ] Packaging for apt, dnf, brew, AUR

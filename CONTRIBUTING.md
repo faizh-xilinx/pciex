@@ -19,6 +19,15 @@ Thanks for your interest in contributing! Here's how to get started.
 - Linux with sysfs (`/sys/bus/pci/devices/`)
 - GNU Make
 
+## Project Structure
+
+- `privilege.c` — Root detection, sudo hints, --force confirmation
+- `barsize.c` — BAR size detection from sysfs resource file
+- `mmio.c` — MMIO BAR access and MSI-X table dump
+- `validate.c` — Automated validation warnings
+- `watch.c` — Live register polling with diff
+- `write.c` — Config write, FLR, bus reset, link retrain
+
 ## Code Style
 
 - C11 standard

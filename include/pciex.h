@@ -5,7 +5,7 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-#define PCIEX_VERSION "0.2.0"
+#define PCIEX_VERSION "0.3.0"
 
 #define PCI_CFG_SPACE_SIZE      256
 #define PCI_EXT_CFG_SPACE_SIZE  4096
@@ -122,6 +122,16 @@ void show_caps(const pci_device_t *dev);
 void show_cap_detail(const pci_device_t *dev, const pci_cap_t *cap);
 void show_hexdump(const pci_device_t *dev);
 void show_all(const pci_device_t *dev);
+void show_validation(const pci_device_t *dev);
+void watch_device(pci_device_t *dev, const char *cap_filter, int interval_sec);
+
+/* ── MMIO ────────────────────────────────────────────────────────── */
+
+void *mmio_map_bar(const pci_device_t *dev, int bar_index, size_t offset, size_t length);
+void mmio_unmap(void *addr, size_t length);
+int mmio_read_region(const pci_device_t *dev, int bar_index, size_t offset, size_t length, uint8_t *buf);
+void show_msix_table(const pci_device_t *dev);
+void show_mmio_dump(const pci_device_t *dev, int bar_index, size_t offset, size_t length);
 
 /* ── Capability decoders ─────────────────────────────────────────── */
 
@@ -163,6 +173,27 @@ void decode_vc_cap(const pci_device_t *dev, uint16_t off);
 void decode_pwr_cap(const pci_device_t *dev, uint16_t off);
 void decode_mcast_cap(const pci_device_t *dev, uint16_t off);
 void decode_vendor_ext_cap(const pci_device_t *dev, uint16_t off);
+
+/* ── Privilege ───────────────────────────────────────────────────── */
+
+bool is_root(void);
+bool require_root(const char *feature);
+bool confirm_destructive(const char *action, const pci_bdf_t *bdf, bool force);
+
+/* ── BAR sizing ──────────────────────────────────────────────────── */
+
+int  pci_read_bar_sizes(pci_device_t *dev);
+void format_bar_size(uint64_t size, char *buf, size_t buflen);
+
+/* ── Config space write ──────────────────────────────────────────── */
+
+int  pci_cfg_write8(pci_device_t *dev, uint16_t off, uint8_t val);
+int  pci_cfg_write16(pci_device_t *dev, uint16_t off, uint16_t val);
+int  pci_cfg_write32(pci_device_t *dev, uint16_t off, uint32_t val);
+void cmd_write_config(pci_device_t *dev, uint16_t offset, uint32_t value, int width, bool force);
+void cmd_flr(pci_device_t *dev, bool force);
+void cmd_sbreset(pci_device_t *dev, bool force);
+void cmd_retrain(pci_device_t *dev, bool force);
 
 /* ── Lookup tables ───────────────────────────────────────────────── */
 

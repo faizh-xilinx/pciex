@@ -76,9 +76,9 @@ void show_bars(const pci_device_t *dev)
                bar->is_64bit ? "64-bit " : "32-bit ",
                bar->prefetchable ? "prefetchable" : "non-prefetchable");
         if (bar->size > 0) {
-            printf("  [size=");
+            printf("  %s[size=", clr(CLR_GREEN));
             print_bar_size(bar->size);
-            printf("]");
+            printf("]%s", clr(CLR_RESET));
         }
         printf("\n");
     }
